@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "app_order")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Data // Lombokがsetter/getter などを自動生成
+@NoArgsConstructor // 引数なしコンストラクタを Lombok で自動生成
+@AllArgsConstructor  // 全フィールドを引数に持つコンストラクタを Lombok で自動生成
 public class AppOrder {
 	// 主キーの定義(AUTO_INCREMENT)
 	@Id
@@ -54,7 +54,7 @@ public class AppOrder {
 	@Column(name = "payment_intent_id", unique = true)
 	private String paymentIntentId;
 
-	// paymrntIntentIdのgetter
+	// paymrntIntentIdのgetter （Lombok の@Data が生成するが、明示的に定義されている）
 	public String getPaymentIntentId() {
 		return paymentIntentId;
 	}
