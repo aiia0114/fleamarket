@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.example.fleamarketsystem.entity.User;
 import com.example.fleamarketsystem.repository.UserRepository;
-import com.example.fleamarketsystem.service.AppOrderservice;
+import com.example.fleamarketsystem.service.AppOrderService;
 import com.example.fleamarketsystem.service.ItemService;
 
 @Controller
