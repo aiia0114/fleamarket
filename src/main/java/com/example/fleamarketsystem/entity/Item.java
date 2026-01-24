@@ -35,7 +35,7 @@ public class Item {
 
 	@ManyToOne
 	@JoinColumn(name = "category_id")
-	private Category vategory;
+	private Category category;
 
 	private String status = "出品中";
 
