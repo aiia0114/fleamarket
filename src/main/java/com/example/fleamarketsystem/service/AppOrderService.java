@@ -110,8 +110,8 @@ public class AppOrderService {
 		return appOrderRepository.findAll();
 	}
 	// 買い手別の注文一覧
-	public List<AppOrder> getOrderBySeller(User seller){
-		return appOrderRepository.findByItem_Seller(seller);
+	public List<AppOrder> getOrderByBuyer(User buyer){
+		return appOrderRepository.findByBuyer(buyer);
 	}
 	// 売り手別の注文一覧
 	public List<AppOrder> getOrdersBySeller(User seller) {
