@@ -20,6 +20,10 @@ public class Review {
 	private Long id;
 
 	@OneToOne
+	@JoinColumn(name = "order_id", nullable = false, unique = true)
+	private AppOrder order;
+
+	@ManyToOne
 	@JoinColumn(name = "reviewer_id", nullable = false)
 	private User reviewer;
 
@@ -35,7 +39,7 @@ public class Review {
 	private Integer rating;
 
 	@Column(columnDefinition = "TEXT")
-	private String commit;
+	private String comment;
 
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt = LocalDateTime.now();
