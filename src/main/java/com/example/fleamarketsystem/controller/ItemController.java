@@ -48,7 +48,7 @@ public class ItemController {
 			ItemService itemService,
 			CategoryService categoryService,
 			UserService userService,
-			CahtService chatService,
+			ChatService chatService,
 			FavoriteService favoriteService,
 			ReviewService reviewService) {
 		// 商品サービスをフィールドへ設定
@@ -80,7 +80,7 @@ public class ItemController {
 		// 検索条件・ページ情報に基づき商品一覧(Page)を取得
 		Page<Item> items = itemService.searchItems(keyword, categoryId, page, size);
 		// カテゴリ一覧を取得
-		List<Category> categories = categoryService.getAllCategories();
+		List<Category> categories = categoryService.getAllCategory();
 
 		// 取得した商品情報をModelへ渡す
 		model.addAttribute("items", items);
@@ -118,7 +118,7 @@ public class ItemController {
 		if(userDetails != null) {
 			// ログインユーザーのUserエンティティを取得
 			User currentUser = userService.getUserByEmail(userDetails.getUsername())
-					.onElseThrows(() -> new RuntimeException("User not found"));
+					.orElseThrow(() -> new RuntimeException("User not found"));
 			// 現在のユーザーがこの商品をお気に入り登録済みかどうかを判定しModelに渡す
 			model.addAttribute("isFavorited", favoriteService.isFavorited(currentUser, id));
 		}
@@ -131,7 +131,7 @@ public class ItemController {
 		// フォームバインドように空のItemオブジェクトをModelへセット
 		model.addAttribute("item", new Item());
 		// カテゴリ洗濯用にカテゴリ一覧をModelへセット
-		model.addAttribute("categories", categoryService.getAllCategories());
+		model.addAttribute("categories", categoryService.getAllCategory());
 		return "item_form";
 	}
 
@@ -158,7 +158,7 @@ public class ItemController {
 				.orElseThrow(() -> new RuntimeException("seller not found"));
 		// カテゴリIDからCategoryを取得。存在しなければ不正として例外
 		Category category = categoryService.getCategoryById(categoryId)
-				.orElseThrow(() -> new IllegaArgumentException("Category not found"));
+				.orElseThrow(() -> new IllegalArgumentException("Category not found"));
 
 		// 新しいItemエンティティを生成してフォーム入力値をセット
 		Item item = new Item();
@@ -198,7 +198,7 @@ public class ItemController {
 		// 取得したItemをModelに設定
 		model.addAttribute("item", item.get());
 		// カテゴリ一覧もModelに設定(プルダウン用)
-		model.addAttribute("categories", categoryService.getAllCategories());
+		model.addAttribute("categories", categoryService.getAllCategory());
 		// 新規登録と同じフォームテンプレートを再利用
 		return "item_form";
 	}
@@ -226,7 +226,7 @@ public class ItemController {
 		// 既存の商品をIDから取得。存在しなければ例外
 		Item existingItem = itemService.getItemById(id).orElseThrow(() -> new RuntimeException("User not found"));
 		// ログイン中のユーザーを取得
-		User currentUser = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new Runtimeexception("User not found"));
+		User currentUser = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
 		// 編集対象商品の出品者IDとログインユーザーIDを比較し、一致しなければ編集不可
 		if(!existingItem.getSeller().getId().equals(currentUser.getId())) {
 			// 出品者以外が編集しようとした場合はエラーメッセージを表示
@@ -235,7 +235,7 @@ public class ItemController {
 		}
 
 		//  カテゴリIDからCategoryを取得し、存在しなければ例外
-		Category category = categoryService.getCategoryById(categoryId).orElseThrow(() -> new IllegaArgumentException("Category bnot found"));
+		Category category = categoryService.getCategoryById(categoryId).orElseThrow(() -> new IllegalArgumentException("Category bnot found"));
 
 		// 既存の商品エンティティにフォームからの値を上書き
 		existingItem.setName(name);
@@ -320,7 +320,7 @@ public class ItemController {
 			RedirectAttributes redirectAttributes
 			) {
 		// ログインユーザーを取得
-		User currentUser = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeExveption("User not found"));
+		User currentUser = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
 		try {
 			// お気に入り解除
 			favoriteService.removeFavorite(currentUser, itemId);

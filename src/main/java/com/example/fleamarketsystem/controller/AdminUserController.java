@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -92,6 +93,20 @@ public class AdminUserController {
 		// ユーザー詳細画面に対応するテンプレート名を返却
 		return "admin/users/detail";
 	}
+	// ユーザーをBAn(利用停止)する処理を担当するハンドラー(POST /admin/users/{id}/ban)
+	@PostMapping("/{id}/ban")
+	public String ban(@PathVariable Long id,
+					  @RequestParam("reason") String reason,
+					  @RequestParam(value = "disableLogin", defaultValue = "true") boolean disableLogin,
+					  Authentication auth) {
+		// 承認情報から現在ログイン中の管理者のメールアドレスを取得し、対応する管理者ユーザーIDを取得
+		Long adminId = users.findByEmailIgnoreCase(auth.getName()).map(User::getId).orElse(null);
+		// 対象ユーザーをBANし、その操作を行った管理者ID・理由・ログイン停止フラグを渡す
+		service.banUser(id, adminId, reason, disableLogin);
+		// 対象ユーザー詳細画面へリダイレクトし、クリエパラメーターでBAN済みであることを通知
+		return "redirect:/admin/users/" + id + "?banned";
+	}
+
 	// ユーザーのBANを解除する処理を担当するハンドラー(POST /admin/users/{id}/unban)
 	@PostMapping("/{id}/unban")
 	public String unban(@PathVariable Long id) {

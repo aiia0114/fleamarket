@@ -29,16 +29,16 @@ public class AppOrderService {
 	private final ItemRepository itemRepository;
 	private final ItemService itemService;
 	private final StripeService stripeService;
-	private final LineNotifyService lineNoifyService;
+	private final LineNotifyService lineNotifyService;
 
 	// 依存の注入
-	public AppOrderService(AppOrderRepository appOrderRepository, ItemRepository itemRepository, ItemService itemService, StripeService stripeService, LineNotifyService lineNoifyService) {
+	public AppOrderService(AppOrderRepository appOrderRepository, ItemRepository itemRepository, ItemService itemService, StripeService stripeService, LineNotifyService lineNotifyService) {
 		// 各依存をフィールドに保持
 		this.appOrderRepository = appOrderRepository;
 		this.itemRepository = itemRepository;
 		this.itemService = itemService;
 		this.stripeService = stripeService;
-		this.lineNoifyService = lineNoifyService;
+		this.lineNotifyService = lineNotifyService;
 	}
 	// 購入確定: PayMentIntent 作成 + 注文を"決済待ち"で作成(PayMentIntent IDを保持)　　
 	@Transactional
@@ -50,7 +50,7 @@ public class AppOrderService {
 			throw new IllegalStateException("Item is not available for purchase.");
 		}
 		// StripeへPaymentIntent作成(JPYは最小単位が1円のためcreateで考慮)
-		PaymentIntent paymentIntent = stripeService.createpaymentIntent(item.getPrice(), "jpy", "購入:" + item.getName());
+		PaymentIntent paymentIntent = stripeService.createPaymentIntent(item.getPrice(), "jpy", "購入:" + item.getName());
 		// 注文を”決済待ち”で作成し、PaymentIntent ID を確実に保存
 		AppOrder appOrder = new AppOrder();
 		// 商品を紐付け
@@ -80,7 +80,7 @@ public class AppOrderService {
 			throw new IllegalStateException("payment not succeeded Status:" + paymentIntent.getStatus());
 		}
 		// 保存済みの注文をPaymentIntent IDで一件特定(ここが安全化の肝)
-		AppOrder appOrder = AppOrderRepository.findByPaymentIntentId(paymentIntentId).orElseThrow(() -> new IllegalStateException("Order for PaymentIntent not found."));
+		AppOrder appOrder = appOrderRepository.findByPaymentIntentId(paymentIntentId).orElseThrow(() -> new IllegalStateException("Order for PaymentIntent not found."));
 		// 既に確定済みなら冪等に成功扱い
 		if("購入済".equals(appOrder.getStatus()) || "発送済".equals(appOrder.getStatus())) {
 			// そのまま返す(再通知などはしない)

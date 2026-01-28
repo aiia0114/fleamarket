@@ -20,8 +20,6 @@ import com.example.fleamarketsystem.service.UserService;
 @Controller
 @RequestMapping("/reviews")
 public class ReviewController {
-
-    private final AppOrderController appOrderController;
 	// レビューに関するビジネスロジックを扱うサービス
 	private final ReviewService reviewService;
 	// 注文情報を取得するサービス
@@ -30,14 +28,13 @@ public class ReviewController {
 	private final UserService userService;
 
 	// コンストラクタインジェクションで必要なサービスを受け取る
-	public ReviewController(ReviewService reviewService, AppOrderService appOrderService, UserService userService, AppOrderController appOrderController) {
+	public ReviewController(ReviewService reviewService, AppOrderService appOrderService, UserService userService) {
 		// 評価サービスをフィールドに設定
 		this.reviewService = reviewService;
 		// 注文サービスをフィールドに設定
 		this.appOrderService = appOrderService;
 		// ユーザーサービスをフィールドに設定
 		this.userService = userService;
-
 	}
 
 	// 新規レビュー入力フォームを表示するためのハンドラ(GET /reviews/new/{orderId})

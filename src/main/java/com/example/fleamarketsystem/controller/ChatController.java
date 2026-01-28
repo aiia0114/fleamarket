@@ -1,6 +1,7 @@
 package com.example.fleamarketsystem.controller;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.fleamarketsystem.entity.User;
+import com.example.fleamarketsystem.service.ChatService;
 import com.example.fleamarketsystem.service.ItemService;
+import com.example.fleamarketsystem.service.UserService;
 
 @Controller
 @RequestMapping("/chat")
@@ -23,7 +26,7 @@ public class ChatController {
 	private final UserService userService;
 
 	// 必要なサービスをコンストラクタインジェクションで受け取る
-	public ChatController(Chatservice chatService, ItemService itemService, UserService userService) {
+	public ChatController(ChatService chatService, ItemService itemService, UserService userService) {
 		// 引数で受け取ったChatServiceをフィールドに設定
 		this.chatService = chatService;
 		// 引数で受け取ったItemServiceをフィールドに設定
@@ -50,11 +53,11 @@ public class ChatController {
 			// パスから対象商品IDを取得
 			@PathVariable("itemId") Long itemId,
 			// ログイン中のユーザー情報をSpring Security から取得
-			@AuthenticationPrincipal UserDetail userDetails,
+			@AuthenticationPrincipal UserDetails userDetails,
 			// フォームから送信されたメッセージ本文を取得
 			@RequestParam("message") String message) {
 		// ログインユーザーのメールアドレスからUserエンティティを取得(存在しなければ例外)
-		User sender = userService.getUserByEmail(userDetail.getUsername())
+		User sender = userService.getUserByEmail(userDetails.getUsername())
 				.orElseThrow(() -> new RuntimeException("Sender not found"));
 		// サービスを通じてチャットメッセージを保存・送信処理
 		chatService.sendMessage(itemId, sender, message);

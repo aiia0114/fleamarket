@@ -21,7 +21,7 @@ public class DashboardController {
 	// 注文情報（売上・注文履歴など）を取得するためのサービス
 	private final AppOrderService appOrderService;
 
-	public DashboardController(UserRepository userRepository, ItemService itemService, AppOrderService appOrderService, UserComplaintRepository userComplaintRepository, AppOrderRepository appOrderRepository) {
+	public DashboardController(UserRepository userRepository, ItemService itemService, AppOrderService appOrderService) {
 		// 渡されたUserRepositoryをフィールドに格納
 		this.userRepository = userRepository;
 		// 渡されたItemServiceをフィールドに格納

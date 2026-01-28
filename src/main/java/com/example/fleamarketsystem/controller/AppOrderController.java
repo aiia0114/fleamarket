@@ -16,6 +16,7 @@ import com.example.fleamarketsystem.entity.User;
 import com.example.fleamarketsystem.repository.AppOrderRepository;
 import com.example.fleamarketsystem.service.AppOrderService;
 import com.example.fleamarketsystem.service.ItemService;
+import com.example.fleamarketsystem.service.UserService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 
@@ -37,6 +38,7 @@ public class AppOrderController {
 
 	// コンストラクタインジェクションで必要なサービスを受け取る
 	public AppOrderController(AppOrderService appOrderService, UserService userService, ItemService itemService, AppOrderRepository appOrderRepository) {
+		this.appOrderRepository = appOrderRepository;
 		// 注文サービスをフィールドに設定
 		this.appOrderService = appOrderService;
 		// ユーザーサービスをフィールドに設定
@@ -54,7 +56,7 @@ public class AppOrderController {
 			// リダイレクト先に一度だけ渡す属性を保持するためのオブジェクト
 			RedirectAttributes redirectAttributes) {
 		// ログインユーザーのメールアドレスからUser エンティティを取得(見つからなければ例外)
-		User buyer = userService.getUserByEmail(userDetails.getUsername()).onElseThrow(() -> new RuntimeException("Buyer not found"));
+		User buyer = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("Buyer not found"));
 		try {
 			// サービス層でstripeのpaymentIntentを作成し、決済開始処理を行う
 			PaymentIntent paymentIntent = appOrderService.initiatePurchase(itemId, buyer);

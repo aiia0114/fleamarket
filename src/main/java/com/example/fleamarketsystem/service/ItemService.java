@@ -6,6 +6,7 @@ import com.example.fleamarketsystem.repository.ItemRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable; // 追加: Pageableのインポート
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,7 +39,7 @@ public class ItemService {
 		// キーワード飲み指定時の検索
 		} else if (keyword != null && !keyword.isEmpty()){
 			// 名前LIKE✖出品中で検索
-			return itemRepository.findByNameContainingIgnoreCaseAndCategoryIdAndStatus(keyword, "出品中", pageable);
+			return itemRepository.findByNameContainingIgnoreCaseAndStatus(keyword, "出品中", pageable);
 		// カテゴリの指定時の検索
 		}else if(categoryId != null) {
 			// カテゴリ✖出品中で検索

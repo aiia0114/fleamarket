@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException{
 		// usernameParameter("email")にしているためフォーム入力値はemail
-		User u = users.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found:" + username));
+		User u = users.findByEmailIgnoreCase(username).orElseThrow(() -> new UsernameNotFoundException("User not found:" + username));
 		// enable=false、banned=trueの場合、ログイン拒否
 		if(!u.isEnabled()) throw new DisabledException("Account disabled"); // アカウント無効化
 		if(!u.isBanned()) throw new DisabledException("Account banned"); // BAN済ユーザー
