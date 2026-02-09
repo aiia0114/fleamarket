@@ -23,11 +23,9 @@ public class CloudinaryService {
 	// 必要な承認情報をコンストラクタインジェクションで受け取る
 	public CloudinaryService(
 			// クラウド名をapplication.propertiesから注入
-			@Value("${coludinary.cloud-name}") String cloudName,
-			// APIキーを注入
-			@Value("${cloudinary.api-Key}") String apiKey,
-			// APIシークレットを注入
-			@Value("${cloudinary.api-secret}") String apiSecret
+			@Value("${cloudinary.cloud_name}") String cloudName,
+			@Value("${cloudinary.api_key}") String apiKey,
+			@Value("${cloudinary.api_secret}") String apiSecret
 			) {
 		// 渡された資格情報でCloudinaryクライアントを初期化
 		cloudinary = new Cloudinary(ObjectUtils.asMap("cloud_name", cloudName,

@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS category CASCADE;					-- カテゴリテーブルを DROP
 DROP TABLE IF EXISTS users CASCADE;						-- ユーザテーブルを DROP
 
 -- ===== users（ユーザー）テーブル作成 =====
-CREATE TABLE user (
+CREATE TABLE users (
 	id SERIAL PRIMARY KEY,								--主キー(連番)
 	name VARCHAR(50) NOT NULL,							-- 表示名（必須）
 	email VARCHAR(255) NOT NULL UNIQUE,					-- ログイン用メール（必須・一意）
@@ -103,7 +103,7 @@ CREATE TABLE review(
 	FOREIGN KEY (order_id) REFERENCES app_order(id),	-- 注文 FK
 	FOREIGN KEY (reviewer_id) REFERENCES users(id),		-- レビュワーFK
 	FOREIGN KEY (seller_id) REFERENCES users(id),		-- 出品者 FK
-	FOREIGN KEY (item_id) REFERENCES item(id),			-- 商品 FK
+	FOREIGN KEY (item_id) REFERENCES item(id)			-- 商品 FK
 );
 
 -- ===== パフォーマンス向上のためのインデックス =====

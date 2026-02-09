@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Service
 public class StripeService {
 	// コンストラクタでシークレットキーを初期化
-	public StripeService(@Value("${stripe.api.secretKey}") String secretKey) {
+	public StripeService(@Value("${stripe.secret-key}") String secretKey) {
 		// Stripe SDKにAPIキーを設定
 		Stripe.apiKey = secretKey;
 	}

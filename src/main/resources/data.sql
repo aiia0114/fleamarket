@@ -17,10 +17,9 @@ INSERT INTO category (name) VALUES
 ('ファッション'),
 -- 玩具カテゴリ
 ('おもちゃ');
--- 初期商品投入（出品者 A が 2 商品を出品）
-INSERT INTO item (user_id, name, description, price, category_id, status, image_url)
+-- 初期商品投入（出品者 A が 2 商品を出品・固定価格）
+INSERT INTO item (user_id, name, description, price, category_id, status, image_url, type, auction_end_time)
 VALUES
--- Java 入門書（カテゴリ：本、出品中）
 (
 (SELECT id FROM users WHERE email = 'sellerA@example.com'),
 	'Java プログラミング入門',
@@ -28,9 +27,10 @@ VALUES
 	1500.00,
 (SELECT id FROM category WHERE name = '本'),
 	'出品中',
-	NULL
+	NULL,
+	'FIXED',
+	CURRENT_TIMESTAMP
 ),
--- イヤホン（カテゴリ：家電、出品中）
 (
 (SELECT id FROM users WHERE email =	'sellerA@example.com'),
 	'ワイヤレスイヤホン',
@@ -38,7 +38,9 @@ VALUES
 	8000.00,
 (SELECT id FROM category WHERE name = '家電'),
 	'出品中',
-	NULL
+	NULL,
+	'FIXED',
+	CURRENT_TIMESTAMP
 );
 
 -- オークション商品の投入（出品者 A が出品）
@@ -48,19 +50,20 @@ VALUES
 (SELECT id FROM users WHERE email = 'sellerA@example.com'),
 	'限定版フィギュア（オークション）',
 	'入手困難なフィギュアです。',
+	3000.00,					
 (SELECT id FROM category WHERE name = 'おもちゃ'),
 	'出品中',
 	NULL,
-	'AUCTION', 					-- type を 'AUCTION' に設定
-	3000.00, 					-- start_price: 開始価格
-	3000.00, 					-- current_bid_price: 初期値として start_price と同額
-	10000.00, 					-- reserve_price: 即決価格
-	'2026-01-01 12:00:00' 		-- auction_end_time: 終了日時（テスト時は未来の日付を設定）
+	'AUCTION',
+	3000.00,
+	3000.00,
+	10000.00,
+	'2026-01-01 12:00:00'
 );
 
 -- 入札データの投入（購入者 B が限定版フィギュアに入札）
 -- 注意: item.current_bid_price と bid.bid_price は一致させておく必要があります
-INSERT INTO bid (item_id, user_id, bid_price, created_at) -- user_idは入札者IDを指す前提
+INSERT INTO bid (item_id, buyer_id, bid_price, created_at)
 VALUES (
 	(SELECT id FROM item WHERE name = '限定版フィギュア（オークション）'),
 	(SELECT id FROM users WHERE email = 'buyerB@example.com'),
