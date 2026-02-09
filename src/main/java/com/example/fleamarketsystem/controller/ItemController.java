@@ -2,6 +2,7 @@ package com.example.fleamarketsystem.controller;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -21,11 +23,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.fleamarketsystem.entity.Category;
 import com.example.fleamarketsystem.entity.Item;
 import com.example.fleamarketsystem.entity.User;
+import com.example.fleamarketsystem.service.BidService;
 import com.example.fleamarketsystem.service.CategoryService;
 import com.example.fleamarketsystem.service.ChatService;
 import com.example.fleamarketsystem.service.FavoriteService;
 import com.example.fleamarketsystem.service.ItemService;
-import com.example.fleamarketsystem.service.ReviewService; // Add this import
+import com.example.fleamarketsystem.service.ReviewService; 
 import com.example.fleamarketsystem.service.UserService;
 
 @Controller
@@ -42,7 +45,9 @@ public class ItemController {
 	// お気に入り機能を扱うサービス
 	private final FavoriteService favoriteService;
 	// レビュー(評価)情報を扱うサービス
-	private final ReviewService reviewService; // Declare ReviewService
+	private final ReviewService reviewService;
+	// 入札を扱うサービス
+	private final BidService bidService;
 
 	public ItemController(
 			ItemService itemService,
@@ -50,19 +55,16 @@ public class ItemController {
 			UserService userService,
 			ChatService chatService,
 			FavoriteService favoriteService,
-			ReviewService reviewService) {
-		// 商品サービスをフィールドへ設定
+			ReviewService reviewService,
+			BidService bidService) {
 		this.itemService = itemService;
-		// カテゴリサービスをフィールドへ設定
 		this.categoryService = categoryService;
-		// ユーザーサービスをフィールドへ設定
 		this.userService = userService;
-		// チャットサービスをフィールドへ設定
 		this.chatService = chatService;
-		// お気に入りサービスをフィールドへ設定
+		
 		this.favoriteService = favoriteService;
-		// レビューサービスをフィールドへ設定
 		this.reviewService = reviewService;
+		this.bidService = bidService;
 	}
 	@GetMapping
 	public String listItems(
@@ -125,6 +127,48 @@ public class ItemController {
 		return "item_detail";
 	}
 
+	// オークション画面
+	@GetMapping("/{id}/auction")
+	public String showAuction(
+			@PathVariable("id") Long id,
+			@AuthenticationPrincipal UserDetails userDetails,
+			Model model,
+			RedirectAttributes redirectAttributes) {
+		Item item = itemService.getItemById(id).orElse(null);
+		if (item == null) {
+			return "redirect:/items";
+		}
+		if (!item.isAuction()) {
+			redirectAttributes.addFlashAttribute("errorMessage", "この商品はオークションではありません");
+			return "redirect:/items/" + id;
+		}
+		if (item.isAuctionEnded()) {
+			redirectAttributes.addFlashAttribute("errorMessage", "このオークションは終了しています");
+			return "redirect:/items/" + id;
+		}
+		model.addAttribute("item", item);
+		model.addAttribute("bids", bidService.getBidsByItemId(id));
+		return "auction";
+	}
+
+	// 入札
+	@PostMapping("/{itemId}/bid")
+	public String placeBid(
+			@PathVariable("itemId") Long itemId,
+			@AuthenticationPrincipal UserDetails userDetails,
+			@RequestParam("bidPrice") BigDecimal bidPrice,
+			RedirectAttributes redirectAttributes) {
+		User currentUser = userService.getUserByEmail(userDetails.getUsername())
+				.orElseThrow(() -> new RuntimeException("User not found"));
+		try {
+			bidService.placeBid(currentUser, itemId, bidPrice);
+			redirectAttributes.addFlashAttribute("successMessage", "入札しました");
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+		}
+		return "redirect:/items/" + itemId + "/auction";
+	}
+
 	// 新規出品フォームの表示
 	@GetMapping("/new")
 	public String showAddItemForm(Model model) {
@@ -148,12 +192,12 @@ public class ItemController {
 			@RequestParam("price") BigDecimal price,
 			// カテゴリID
 			@RequestParam("categoryId") Long categoryId,
-			// 画像ファイル（任意）
-			@RequestParam(value = "image" , required = false) MultipartFile imageFile,
-			// リダイレクト先へメッセージを渡すためのオブジェクト
-			RedirectAttributes redirectAttributes
-			) {
-		// ログインユーザーから出品者情報を取得。見つからない場合は例外
+			@RequestParam(value = "image", required = false) MultipartFile imageFile,
+			@RequestParam(value = "type", required = false, defaultValue = "FIXED") String type,
+			@RequestParam(value = "startPrice", required = false) BigDecimal startPrice,
+			@RequestParam(value = "reservePrice", required = false) BigDecimal reservePrice,
+			@RequestParam(value = "auctionEndTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime auctionEndTime,
+			RedirectAttributes redirectAttributes) {
 		User seller = userService.getUserByEmail(userDetails.getUsername())
 				.orElseThrow(() -> new RuntimeException("seller not found"));
 		// カテゴリIDからCategoryを取得。存在しなければ不正として例外
@@ -172,6 +216,16 @@ public class ItemController {
 		item.setPrice(price);
 		//カテゴリを設定
 		item.setCategory(category);
+		if ("AUCTION".equals(type) && startPrice != null && auctionEndTime != null) {
+			item.setType("AUCTION");
+			item.setStartPrice(startPrice);
+			item.setPrice(startPrice);
+			item.setCurrentBidPrice(null);
+			item.setReservePrice(reservePrice);
+			item.setAuctionEndTime(auctionEndTime);
+		} else {
+			item.setPrice(price);
+		}
 
 		try {
 			// サービスに保存処理を依頼(画像アップロードも含む)

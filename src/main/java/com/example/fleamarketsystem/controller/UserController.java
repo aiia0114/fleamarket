@@ -9,9 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.example.fleamarketsystem.entity.User;
 import com.example.fleamarketsystem.service.AppOrderService;
+import com.example.fleamarketsystem.service.BidService;
 import com.example.fleamarketsystem.service.FavoriteService;
 import com.example.fleamarketsystem.service.ItemService;
-import com.example.fleamarketsystem.service.ReviewService; // Add this import
+import com.example.fleamarketsystem.service.ReviewService;
 import com.example.fleamarketsystem.service.UserService;
 
 @Controller
@@ -27,21 +28,18 @@ public class UserController {
 	private final FavoriteService favoriteService;
 	// レビュー情報取得用サービス
 	private final ReviewService reviewService;
-	// コンストラクタインジェクションにより依存サービスを受け取る
+	// 入札情報取得用サービス
+	private final BidService bidService;
+
 	public UserController(
 			UserService userService, ItemService itemService, AppOrderService appOrderService,
-			FavoriteService favoriteService, ReviewService reviewService
-			) {
-		// UserServiceの設定
-		this.userService= userService;
-		// ItemServiceの設定
+			FavoriteService favoriteService, ReviewService reviewService, BidService bidService) {
+		this.userService = userService;
 		this.itemService = itemService;
-		// appOrderServiceの設定
 		this.appOrderService = appOrderService;
-		// FavoriteServiceの設定
 		this.favoriteService = favoriteService;
-		// ReviewServiceの設定
 		this.reviewService = reviewService;
+		this.bidService = bidService;
 	}
 
 	// マイページ表示(GET /my-page)
@@ -102,11 +100,16 @@ public class UserController {
 	// 自分が投稿したレビュー一覧(GET /my-page/reviews)
 	@GetMapping("/reviews")
 	public String myReviews(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-		// ログインユーザー取得
 		User currentUser = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
-		// 自分が投稿したレビュー一覧をModelへ格納
 		model.addAttribute("reviews", reviewService.getReviewsByReviewer(currentUser));
-		// user_reviews.html へ遷移
 		return "user_reviews";
+	}
+
+	// 入落札の確認(GET /my-page/bids)
+	@GetMapping("/bids")
+	public String myBids(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+		User currentUser = userService.getUserByEmail(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+		model.addAttribute("myBids", bidService.getBidsByBuyer(currentUser));
+		return "my_bids";
 	}
 }
