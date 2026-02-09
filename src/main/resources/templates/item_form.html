@@ -47,16 +47,36 @@ xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
             </p>
             <!-- カテゴリの選択 -->
             <p>
-                <!-- カテゴリラベル -->
                 <label for="categoryId">カテゴリ:</label>
-                <!-- 必須のセレクトボックス。初期値は選択してください -->
                 <select id="categoryId"name="categoryId" required>
-                    <!-- 空選択のプレースホルダ -->
                     <option value="">選択してください</option>
-                    <!-- categories をループして option を生成。既存カテゴリと一致時は選択 -->
                 <option th:each="category : ${categories}" th:value="${category.id}"th:text="${category.name}" th:selected="${item.category != null and item.category.id ==category.id}"></option>
                 </select>
             </p>
+            <!-- 出品タイプ（固定価格 or オークション） -->
+            <p>
+                <label>出品タイプ:</label>
+                <input type="radio" name="type" id="typeFixed" value="FIXED" th:checked="${item.type == null || item.type == 'FIXED'}">
+                <label for="typeFixed" style="display:inline;">固定価格</label>
+                <input type="radio" name="type" id="typeAuction" value="AUCTION" th:checked="${item.type == 'AUCTION'}">
+                <label for="typeAuction" style="display:inline;">オークション</label>
+            </p>
+            <!-- オークション時のみ表示 -->
+            <div id="auctionFields" th:style="${item.type == 'AUCTION'} ? 'display:block' : 'display:none'">
+                <p>
+                    <label for="startPrice">開始価格 (¥):</label>
+                    <input type="number" id="startPrice" name="startPrice" step="0.01" min="0" th:value="${item.startPrice}">
+                </p>
+                <p>
+                    <label for="reservePrice">即時落札価格 (¥):</label>
+                    <input type="number" id="reservePrice" name="reservePrice" step="0.01" min="0" th:value="${item.reservePrice}">
+                    <span class="hint">（任意）</span>
+                </p>
+                <p>
+                    <label for="auctionEndTime">終了日時:</label>
+                    <input type="datetime-local" id="auctionEndTime" name="auctionEndTime" th:value="${item.auctionEndTime != null ? #temporals.format(item.auctionEndTime, 'yyyy-MM-dd''T''HH:mm') : null}">
+                </p>
+            </div>
             <p>
                 <!-- 画像アップロード -->
                 <!-- 画像ラベル -->
@@ -68,12 +88,30 @@ xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
             </p>
             <!-- 送信/キャンセルボタン -->
             <div class="button-group">
-                <!-- 新規なら「出品する」、編集なら「更新する」 -->
                 <button type="submit" th:text="${item.id == null ? '出品する' : '更新する'}"></button>
-                <!-- 一覧へ戻る -->
                 <a th:href="@{/items}" class="button secondary">キャンセル</a>
             </div>
         </form>
     </div>
+    <script>
+        (function() {
+            var typeFixed = document.getElementById('typeFixed');
+            var typeAuction = document.getElementById('typeAuction');
+            var auctionFields = document.getElementById('auctionFields');
+            var priceInput = document.getElementById('price');
+            var startPriceInput = document.getElementById('startPrice');
+            var auctionEndTimeInput = document.getElementById('auctionEndTime');
+            function toggleAuction() {
+                var isAuction = typeAuction.checked;
+                auctionFields.style.display = isAuction ? 'block' : 'none';
+                priceInput.required = !isAuction;
+                startPriceInput.required = isAuction;
+                auctionEndTimeInput.required = isAuction;
+            }
+            typeFixed.addEventListener('change', toggleAuction);
+            typeAuction.addEventListener('change', toggleAuction);
+            toggleAuction();
+        })();
+    </script>
 </body>
 </html>

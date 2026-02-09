@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${item.name} + ' - オークション'"></title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${item.name}"></h1>
+        <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+        <div th:if="${successMessage}" class="success-message" th:text="${successMessage}"></div>
+
+        <div class="item-detail">
+            <img th:src="${item.imageUrl != null ? item.imageUrl : '/images/placeholder.png'}" alt="商品画像" class="item-image">
+            <p th:text="${item.description}"></p>
+            <p>出品者: <span th:text="${item.seller.name}"></span></p>
+            <p>開始価格: <span th:text="'¥' + ${#numbers.formatDecimal(item.startPrice, 0, 'COMMA', 0, 'POINT')}"></span></p>
+            <p>現在価格: <span th:text="'¥' + ${#numbers.formatDecimal(item.currentBidPrice != null ? item.currentBidPrice : item.startPrice, 0, 'COMMA', 0, 'POINT')}"></span></p>
+            <p th:if="${item.reservePrice != null}">即時落札価格: <span th:text="'¥' + ${#numbers.formatDecimal(item.reservePrice, 0, 'COMMA', 0, 'POINT')}"></span></p>
+            <p>終了日時: <span th:text="${#temporals.format(item.auctionEndTime, 'yyyy/MM/dd HH:mm')}"></span></p>
+        </div>
+
+        <div sec:authorize="isAuthenticated()" th:if="${item.seller.email != #authentication.name}">
+            <h2>入札する</h2>
+            <form th:action="@{/items/{itemId}/bid(itemId=${item.id})}" method="post">
+                <p>
+                    <label for="bidPrice">入札額 (¥):</label>
+                    <input type="number" id="bidPrice" name="bidPrice" step="0.01" min="0" required
+                      th:attr="min=${item.currentBidPrice != null ? item.currentBidPrice : item.startPrice}">
+                </p>
+                <button type="submit" class="button">入札する</button>
+            </form>
+            <p th:if="${item.reservePrice != null}">
+                <form th:action="@{/items/{itemId}/bid(itemId=${item.id})}" method="post" style="display:inline;">
+                    <input type="hidden" name="bidPrice" th:value="${item.reservePrice}">
+                    <button type="submit" class="button" onclick="return confirm('即時落札価格で落札しますか？');">即時落札する</button>
+                </form>
+            </p>
+        </div>
+
+        <h2>入札履歴</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>入札額</th>
+                    <th>入札者</th>
+                    <th>日時</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="bid : ${bids}">
+                    <td th:text="'¥' + ${#numbers.formatDecimal(bid.bidPrice, 0, 'COMMA', 0, 'POINT')}"></td>
+                    <td th:text="${bid.buyer.name}"></td>
+                    <td th:text="${#temporals.format(bid.createdAt, 'yyyy/MM/dd HH:mm')}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bids)}">
+                    <td colspan="3">まだ入札はありません。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="button-group">
+            <a th:href="@{/items/{id}(id=${item.id})}" class="button secondary">商品詳細に戻る</a>
+            <a th:href="@{/items}" class="button secondary">商品一覧</a>
+        </div>
+    </div>
+</body>
+</html>

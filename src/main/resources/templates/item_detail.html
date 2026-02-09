@@ -41,8 +41,10 @@ xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
             <p>ステータス: <span th:text="${item.status}"></span></p>
             <!-- アクションボタン群 -->
             <div class="button-group">
-                <!-- 自分以外が出品した「出品中」商品だけ購入ボタンを表示 -->
-                <form th:action="@{/orders/initiate-purchase}" method="post"th:if="${item.status =='出品中' and item.seller.email != #authentication.name}"onsubmit="return confirm('本当にこの商品を購入しますか？');">
+                <!-- オークション商品で未終了ならオークション画面へ -->
+                <a th:if="${item.isAuction() and !item.isAuctionEnded() and item.status == '出品中'}" th:href="@{/items/{id}/auction(id=${item.id})}" class="button">オークションを見る</a>
+                <!-- 自分以外が出品した「出品中」固定価格だけ購入ボタンを表示 -->
+                <form th:action="@{/orders/initiate-purchase}" method="post"th:if="${item.status =='出品中' and item.seller.email != #authentication.name and !item.isAuction()}"onsubmit="return confirm('本当にこの商品を購入しますか？');">
                     <!-- Stripe 連携に渡す itemId を hidden で送信 -->
                     <input type="hidden"name="itemId" th:value="${item.id}">
                     <!-- 購入開始ボタン -->
